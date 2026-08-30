@@ -4,43 +4,45 @@ Aplicativo de controle financeiro **100% manual**, **focado em privacidade**, se
 
 ## Tecnologias
 
-- **Backend:** Node.js + Express + SQLite (usando `node:sqlite`, embutido no Node 18+/22+ — sem compilação nativa)
+- **Backend:** Node.js + Express + **PostgreSQL** (`pg`)
 - **Autenticação:** JWT (tokens), senhas com hash (bcryptjs)
+- **Banco:** PostgreSQL gerenciado (ex.: Neon, Supabase, Render Postgres)
 - **Frontend:** HTML/CSS/JS estático servido pelo próprio Express + Chart.js (CDN)
 - **Sem integração bancária** de qualquer tipo.
 
 ## Como rodar localmente
 
-Pré-requisito: **Node.js 20+** (o `node:sqlite` requer Node 22+; recomendado Node 24).
+Pré-requisito: **Node.js 18+** e um **PostgreSQL** acessível.
 
-```bash
-npm install
-npm start
-```
-
-Depois abra `http://localhost:3000`.
-
-O banco SQLite é criado automaticamente na pasta `data/`. Um **`.env`** pode ser criado a partir do `.env.example` para configurar porta e segredo do JWT.
+1. Crie um arquivo `.env` na pasta (copie de `.env.example`):
+   ```
+   DATABASE_URL=postgres://usuario:senha@host:5432/banco
+   JWT_SECRET=qualquer_senha_longa
+   ```
+2. Instale e rode:
+   ```bash
+   npm install
+   npm start
+   ```
+3. Abra `http://localhost:3000`. As tabelas são criadas automaticamente ao iniciar.
 
 > ⚠️ Em produção, defina um `JWT_SECRET` forte. Sem ele, o app usa um segredo de desenvolvimento.
 
+> 💡 Para testar grátis e rápido, crie um Postgres no **Neon** e use a URL de conexão.
+
 ## Deploy
 
-Este projeto está pronto para plataformas que suportam Node.js, como **Render** e **Railway**.
+Este projeto está pronto para plataformas que suportam Node.js. Veja o passo a passo completo no arquivo **`GUIA_DEPLOY.md`** (Render + Neon, tudo grátis).
 
-### Render (Web Service)
-1. Crie um novo **Web Service** apontando para o repositório Git.
-2. Build Command: `npm install`
-3. Start Command: `npm start`
-4. Adicione as variáveis de ambiente:
-   - `JWT_SECRET` = um valor aleatório e longo
-   - (opcional) `DATA_DIR` e, **importante**, use um **persistent disk** no Render para o SQLite, pois o disco do serviço é efêmero (os dados seriam perdidos a cada deploy/restart se você não montar um disco persistente).
+Passos resumidos:
+1. Suba o código para um repositório no **GitHub**.
+2. Crie um Postgres grátis no **Neon** e copie a `DATABASE_URL`.
+3. No **Render**, crie um Web Service a partir do repositório:
+   - Build: `npm install`
+   - Start: `npm start`
+   - Env vars: `DATABASE_URL` e `JWT_SECRET`
 
-### Railway
-1. Faça deploy do repositório (start `npm start`).
-2. Railway tem volumes; monte o `DATA_DIR` num volume persistente para manter o SQLite entre deploys.
-
-> **Sobre persistência do SQLite:** plataformas com **filesystem efêmero** (ex.: free tier do Render) apagam os arquivos locais a cada reinício. Para dados que sobrevivem entre deploys, monte um **persistent disk / volume** em `DATA_DIR`, ou use um banco gerenciado (ex.: Postgres). O código está estruturado para apontar `DATA_DIR` para onde você montar o disco.
+Com Postgres (Neon etc.), **os dados permanecem** mesmo no plano grátis do Render (que usa disco efêmero e não é adequado para SQLite).
 
 ## Privacidade
 
@@ -70,14 +72,14 @@ Cada usuário tem sua própria conta (e-mail + senha, com hash) e seus dados sã
 ```
 financeiro/
 ├── server.js        # Express: API + autenticação + serve o frontend
-├── db.js            # SQLite (node:sqlite)
+├── db.js            # Conexão com PostgreSQL (pg)
 ├── package.json
 ├── .env.example
-├── public/          # Frontend estático
-│   ├── index.html
-│   ├── css/style.css
-│   └── js/...
-└── data/            # Banco SQLite (criado em runtime)
+├── GUIA_DEPLOY.md    # Passo a passo de deploy (Render + Neon)
+└── public/          # Frontend estático
+    ├── index.html
+    ├── css/style.css
+    └── js/...
 ```
 
 ## API (resumo)
