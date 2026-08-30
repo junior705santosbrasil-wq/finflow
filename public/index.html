@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>FinFlow · Controle Financeiro Manual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>" />
+</head>
+<body>
+  <div class="auth-screen hidden" id="authScreen">
+    <div class="auth-card" id="authCard">
+      <div class="auth-brand">
+        <span class="auth-logo">🪙</span>
+        <h1>FinFlow</h1>
+        <p>Controle financeiro pessoal manual</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-authtab="login">Entrar</button>
+        <button class="auth-tab" data-authtab="registrar">Criar conta</button>
+      </div>
+
+      <form id="authForm" class="auth-form">
+        <input type="hidden" id="authMode" value="login" />
+        <div class="field" id="authNomeField" style="display:none">
+          <label for="authNome">Nome</label>
+          <input type="text" id="authNome" placeholder="Seu nome" maxlength="60" />
+        </div>
+        <div class="field">
+          <label for="authEmail">E-mail</label>
+          <input type="email" id="authEmail" required placeholder="voce@email.com" />
+        </div>
+        <div class="field">
+          <label for="authSenha">Senha</label>
+          <input type="password" id="authSenha" required placeholder="••••••••" minlength="6" />
+        </div>
+        <div class="auth-error hidden" id="authError"></div>
+        <button type="submit" class="btn btn-primary auth-submit" id="authSubmit">Entrar</button>
+      </form>
+
+      <p class="auth-note">🔒 Sem conexão com bancos, cartões ou Open Finance. Os dados ficam guardados com segurança no servidor.</p>
+    </div>
+  </div>
+
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <span class="brand-logo">🪙</span>
+        <span class="brand-name">FinFlow</span>
+        <button class="sidebar-toggle" id="sidebarClose" aria-label="Fechar menu">✕</button>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">📊</span><span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-page="lancamentos">
+          <span class="nav-icon">📋</span><span>Lançamentos</span>
+        </button>
+        <button class="nav-item" data-page="orcamentos">
+          <span class="nav-icon">🎯</span><span>Orçamentos</span>
+        </button>
+        <button class="nav-item" data-page="metas">
+          <span class="nav-icon">🏆</span><span>Metas</span>
+        </button>
+        <button class="nav-item" data-page="relatorios">
+          <span class="nav-icon">📈</span><span>Relatórios</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="privacy-note">
+          <span class="privacy-icon">🔒</span>
+          <p>Você não precisa conectar sua conta bancária. Registre manualmente suas receitas e despesas e tenha controle total sobre suas informações.</p>
+        </div>
+        <div class="user-box">
+          <div class="user-box-avatar" id="userAvatar">👤</div>
+          <div class="user-box-info">
+            <div class="user-box-name" id="userName">Usuário</div>
+            <button class="user-box-logout" id="btnLogout">Sair</button>
+          </div>
+        </div>
+        <button class="dark-toggle" id="darkToggle">
+          <span class="dark-toggle-icon">🌙</span><span>Modo escuro</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        <div class="topbar-actions">
+          <button class="btn btn-primary btn-new" id="btnNovoLancamento">
+            <span class="btn-plus">+</span> Novo lançamento
+          </button>
+        </div>
+      </header>
+
+      <div class="page" id="page-dashboard"></div>
+      <div class="page hidden" id="page-lancamentos"></div>
+      <div class="page hidden" id="page-orcamentos"></div>
+      <div class="page hidden" id="page-metas"></div>
+      <div class="page hidden" id="page-relatorios"></div>
+    </main>
+  </div>
+
+  <!-- Modal Novo/Editar lançamento -->
+  <div class="modal hidden" id="modalLancamento">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalLancamentoTitle">Novo lançamento</h2>
+        <button class="modal-close" data-close="modalLancamento">✕</button>
+      </div>
+      <form id="formLancamento">
+        <input type="hidden" id="lancPersistenceId" />
+        <div class="type-selector">
+          <button type="button" class="type-btn receita active" data-type="receita">⬆ Receita</button>
+          <button type="button" class="type-btn despesa" data-type="despesa">⬇ Despesa</button>
+        </div>
+
+        <div class="field">
+          <label for="lancDescricao">Descrição *</label>
+          <input type="text" id="lancDescricao" required placeholder="Ex.: Salário, Mercado, Aluguel..." />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="lancValor">Valor (R$) *</label>
+            <input type="number" id="lancValor" required min="0.01" step="0.01" placeholder="0,00" />
+          </div>
+          <div class="field">
+            <label for="lancData">Data *</label>
+            <input type="date" id="lancData" required />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="lancCategoria">Categoria</label>
+            <div style="display:flex;gap:8px;align-items:stretch">
+              <select id="lancCategoria" style="flex:1"></select>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnNovaCategoria" title="Nova categoria" style="padding:9px 12px">＋</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="lancPagamento">Forma de pagamento</label>
+            <select id="lancPagamento">
+              <option value="">—</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="pix">Pix</option>
+              <option value="debito">Débito</option>
+              <option value="credito">Crédito</option>
+              <option value="boleto">Boleto</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="lancObservacao">Observação</label>
+          <textarea id="lancObservacao" rows="2" placeholder="Opcional"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close="modalLancamento">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar lançamento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Confirmação de exclusão -->
+  <div class="modal hidden" id="modalConfirm">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2>Excluir lançamento</h2>
+        <button class="modal-close" data-close="modalConfirm">✕</button>
+      </div>
+      <p class="confirm-text">Tem certeza que deseja excluir este lançamento? Esta ação não pode ser desfeita.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close="modalConfirm">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmDelete">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Nova categoria -->
+  <div class="modal hidden" id="modalCategoria">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2>Nova categoria</h2>
+        <button class="modal-close" data-close="modalCategoria">✕</button>
+      </div>
+      <form id="formCategoria">
+        <div class="type-selector">
+          <button type="button" class="type-btn receita active" data-type="receita">⬆ Receita</button>
+          <button type="button" class="type-btn despesa" data-type="despesa">⬇ Despesa</button>
+        </div>
+        <div class="field">
+          <label for="catNome">Nome da categoria *</label>
+          <input type="text" id="catNome" required maxlength="40" placeholder="Ex.: Pets, Investimentos..." />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close="modalCategoria">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Criar categoria</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Nova meta -->
+  <div class="modal hidden" id="modalMeta">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalMetaTitle">Nova meta</h2>
+        <button class="modal-close" data-close="modalMeta">✕</button>
+      </div>
+      <form id="formMeta">
+        <input type="hidden" id="metaEditId" />
+        <div class="field">
+          <label for="metaNome">Nome da meta *</label>
+          <input type="text" id="metaNome" required maxlength="60" placeholder="Ex.: Fazer uma viagem" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="metaObjetivo">Valor objetivo (R$) *</label>
+            <input type="number" id="metaObjetivo" required min="0.01" step="0.01" />
+          </div>
+          <div class="field">
+            <label for="metaAcumulado">Valor acumulado (R$)</label>
+            <input type="number" id="metaAcumulado" min="0" step="0.01" value="0" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="metaPrazo">Prazo</label>
+          <input type="date" id="metaPrazo" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close="modalMeta">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar meta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/lancamentos.js"></script>
+  <script src="js/orcamentos.js"></script>
+  <script src="js/metas.js"></script>
+  <script src="js/relatorios.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
