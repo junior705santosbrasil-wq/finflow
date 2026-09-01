@@ -14,6 +14,9 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || '7d';
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 
+// Servir os arquivos estáticos do frontend (CSS, JS, imagens)
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Criar as tabelas ao iniciar
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -247,9 +250,12 @@ app.delete('/api/metas/:id', authMiddleware, async (req, res) => {
   res.json({ ok: true });
 });
 
-// Fallback SPA
+// Fallback SPA: só para rotas sem extensão de arquivo
+// (deixa o express.static servir os assets como CSS/JS corretamente)
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
+  const hasExtension = /\.[a-zA-Z0-9]+$/.test(req.path);
+  if (hasExtension) return next();
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
