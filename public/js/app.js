@@ -106,6 +106,9 @@ const App = {
     document.querySelector('.app').classList.remove('hidden');
     document.getElementById('userName').textContent = (this._user && this._user.nome) || 'Usuário';
     document.getElementById('userAvatar').textContent = (this._user && this._user.nome ? this._user.nome.charAt(0).toUpperCase() : '👤');
+    const prof = this._user && this._user.nome ? this._user.nome.trim().split(/\s+/)[0] : 'Conta';
+    document.getElementById('profileName').textContent = prof;
+    document.getElementById('profileAvatar').textContent = prof ? prof.charAt(0).toUpperCase() : '👤';
     this.goTo('dashboard');
     toast('Bem-vindo, ' + ((this._user && this._user.nome) || '') + '!');
   },
